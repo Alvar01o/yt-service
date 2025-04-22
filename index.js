@@ -172,7 +172,11 @@ app.delete('/api/recursos/:id', (req, res) => {
 });
 
 // Levantar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('❌ Ocurrió un error en el servidor:', err);
 });
 
