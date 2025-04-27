@@ -178,5 +178,5 @@ const server = app.listen(PORT, () => {
 
 server.on('error', (err) => {
   console.error('❌ Ocurrió un error en el servidor:', err);
-});
+}); 
 

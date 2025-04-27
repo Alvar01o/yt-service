@@ -11,10 +11,11 @@
   "author": "alvar01omer@gmail.com",
   "license": "ISC",
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.9",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "express": "^5.1.0",
     "fluent-ffmpeg": "^2.1.3",
-    "ytdl-core": "npm:@distube/ytdl-core@^4.16.8"
+    "ytdl-core": "npm:@distube/ytdl-core@^4.16.9"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
