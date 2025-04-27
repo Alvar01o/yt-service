@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3003;
+const fs = require("fs");
 
 // Importar y configurar librerías para descargar/conversión de YouTube
 const ytdl = require('ytdl-core');
@@ -57,8 +58,10 @@ app.post('/api/downloadmp3', async (req, res) => {
       });
     }
 
+    // agent should be created once if you don't want to change your cookie
+    const agent = ytdl.createAgent(JSON.parse(fs.readFileSync("cookies.json")));
     // Obtener información del video (para extraer el título y usarlo tanto en el nombre del archivo como en metadatos)
-    const info = await ytdl.getInfo(youtubeUrl);
+    const info = await ytdl.getInfo(youtubeUrl, {agent});
 
     const videoTitle = info.videoDetails.title || 'video_sin_titulo';
 
