@@ -1,3 +1,3 @@
-curl -X POST http://localhost:3003/api/downloadmp3 \
+curl -X POST http://localhost:3003/api/downloadmp3_2 \
   -H "Content-Type: application/json" \
-  -d '{"youtubeUrl": "https://www.youtube.com/watch?v=eGB4ZbGSw28&list=RDeGB4ZbGSw28&start_radio=1"}'
+  -d '{"youtubeUrl": "https://www.youtube.com/watch?v=8oSlSOnpgWo"}'
