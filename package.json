@@ -2,7 +2,7 @@
   "name": "msic-downloader",
   "version": "1.0.0",
   "description": "download yt mp3 and maybe others features",
-    "type": "module",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "test",
@@ -14,12 +14,14 @@
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "axios": "^1.11.0",
     "crypto": "^1.0.1",
     "express": "^5.1.0",
     "fluent-ffmpeg": "^2.1.3",
     "sqlite3": "^5.1.7",
     "youtubei.js": "^15.0.1",
-    "ytdl-core": "npm:@distube/ytdl-core@^4.16.9"
+    "ytdl-core": "npm:@distube/ytdl-core@^4.16.9",
+    "ytpl": "^2.3.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

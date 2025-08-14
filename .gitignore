@@ -1,6 +1,6 @@
 # Node modules
 node_modules/
-
+downloader/node_modules/
 # Logs
 logs/
 *.log

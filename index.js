@@ -186,16 +186,30 @@ app.post('/api/downloadmp3_2', async (req, res) => {
     try {
       const info = await ytInstance.getInfo(videoId);
       const videoTitle = info.basic_info?.title || 'video_sin_titulo';
-
-      const audioFormat = info.streaming_data?.adaptive_formats?.find(f =>
-        f.mime_type.includes('audio/mp4') || f.mime_type.includes('audio/webm')
-      );
-
+      console.log(`[INFO] Título del video: ${videoTitle}`);
+      console.log('info.streamingData', info.streaming_data);
+      const streamingData = info.streaming_data;
+      const audioFormats = streamingData.adaptive_formats.filter(format => format.mime_type.startsWith('audio/'));
+      let audioStreamUrl = undefined;
+      console.log('audioFormats', audioFormats);
+      if (audioFormats.length > 0) {
+          audioStreamUrl = audioFormats[0].url; // Select the first available audio format or apply further filtering
+          console.log('Audio Stream URL:', audioStreamUrl);
+      } else {
+          console.log('No audio stream found.');
+      }
+      const audioFormat = audioStreamUrl ? { url: audioStreamUrl } : null;
       if (!audioFormat || !audioFormat.url) {
+        console.log('[ERROR] No se encontró un stream de audio disponible.', audioFormat);
         return res.status(500).json({ error: 'No se encontró un stream de audio disponible.' });
       }
 
       const sanitizedTitle = videoTitle.replace(/[^\w\s.-]/gi, '_');
+      const metaTitle = videoTitle
+        .replace(/[\r\n]/g, ' ')     // no newlines
+        .replace(/[=:]/g, '-')       // ':' y '=' causan problemas
+        .replace(/["']/g, '')        // comillas fuera
+        .trim();      
       const outputFileName = `${sanitizedTitle}.mp3`;
       const outputDir = './resource/';
       const outputPath = path.join(outputDir, outputFileName);
@@ -206,7 +220,7 @@ app.post('/api/downloadmp3_2', async (req, res) => {
 
       await new Promise((resolve, reject) => {
         ffmpeg(audioFormat.url)
-          .outputOptions(['-metadata', `title=${videoTitle}`])
+          .outputOptions(['-metadata', `title=${metaTitle}`])
           .audioCodec('libmp3lame')
           .audioBitrate(128)
           .save(outputPath)
