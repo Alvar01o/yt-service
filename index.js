@@ -10,7 +10,7 @@ import { Innertube } from 'youtubei.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename);
 
 // SQLite verbose
@@ -73,7 +73,6 @@ app.post('/api/downloadmp3', async (req, res) => {
   const clientIp = req.ip;
   const requestTime = new Date().toISOString();
 
-  // Verificar si ya fue descargado
   db.get('SELECT * FROM songs WHERE id = ?', [id], async (err, row) => {
     if (err) {
       console.error('[DB ERROR]', err);
@@ -91,7 +90,27 @@ app.post('/api/downloadmp3', async (req, res) => {
     }
 
     try {
-      const agent = ytdl.createAgent(JSON.parse(fs.readFileSync("cookies.json")));
+      // --- Preparar agent con cookies + UA (y fallback si no hay cookies) ---
+      const UA =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36';
+
+      let cookies = undefined;
+      try {
+        if (fs.existsSync('cookies.json')) {
+          cookies = JSON.parse(fs.readFileSync('cookies.json', 'utf8'));
+        }
+      } catch (e) {
+        console.warn('[WARN] No se pudieron leer cookies.json, sigo sin cookies:', e.message);
+      }
+
+      // createAgent acepta (cookies, options)
+      const agent = ytdl.createAgent(cookies, {
+        headers: { 'user-agent': UA },
+        // por si la lib respeta este flag:
+        maxRedirects: 5,
+      });
+
+      // --- Info con agent ---
       const info = await ytdl.getInfo(youtubeUrl, { agent });
       const videoTitle = info.videoDetails.title || 'video_sin_titulo';
       const sanitizedTitle = videoTitle.replace(/[^\w\s.-]/gi, '_');
@@ -99,12 +118,20 @@ app.post('/api/downloadmp3', async (req, res) => {
       const outputDir = './resource/';
       const outputPath = path.join(outputDir, outputFileName);
 
-      // Crear carpeta si no existe
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
+      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
-      const videoStream = ytdl(youtubeUrl, { filter: 'audioonly' });
+      // --- STREAM con el MISMO agent (¡esto faltaba!) ---
+      const videoStream = ytdl(youtubeUrl, {
+        agent,
+        filter: 'audioonly',
+        quality: 'highestaudio',
+        requestOptions: {
+          // Algunos forks revisan esto:
+          maxRedirects: 5,
+          headers: { 'user-agent': UA },
+        },
+        highWaterMark: 1 << 25, // buffer generoso para evitar cortes
+      });
 
       await new Promise((resolve, reject) => {
         ffmpeg(videoStream)
@@ -123,7 +150,6 @@ app.post('/api/downloadmp3', async (req, res) => {
       });
 
       const createdAt = new Date().toISOString();
-
       db.run(
         'INSERT INTO songs (id, title, file_path, created_at) VALUES (?, ?, ?, ?)',
         [id, videoTitle, outputPath, createdAt],
@@ -132,7 +158,6 @@ app.post('/api/downloadmp3', async (req, res) => {
             console.error('[DB INSERT ERROR]', dbErr);
             return res.status(500).json({ error: 'Error al guardar en la base de datos.' });
           }
-
           return res.json({
             message: 'Descarga y conversión exitosas.',
             file: outputPath,
@@ -142,13 +167,13 @@ app.post('/api/downloadmp3', async (req, res) => {
           });
         }
       );
-
     } catch (error) {
       console.error('[ERROR GENERAL]', error);
       return res.status(500).json({ error: 'Ocurrió un error en la descarga.' });
     }
   });
 });
+
 
 app.post('/api/downloadmp3_2', async (req, res) => {
   const { youtubeUrl } = req.body;
